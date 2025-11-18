@@ -3,725 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chinese Chess (Xiangqi) Pro</title>
+    <title>Xiangqi 2077 - Cyberpunk Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --board-bg: #eecfa1;
-            --line-color: #5d4037;
-            --piece-size: 45px;
-            --highlight-color: rgba(0, 255, 0, 0.5);
-            --selected-color: rgba(0, 0, 255, 0.4);
-            --last-move-color: rgba(255, 255, 0, 0.4);
-            --shadow-color: rgba(0, 0, 0, 0.4);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
         body {
-            font-family: 'Noto Serif SC', serif;
-            background-color: #2c2c2c;
-            color: #eee;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            touch-action: none;
+            font-family: 'Orbitron', sans-serif;
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(0, 20, 30, 0.8) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 20, 30, 0.8) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: #e0e0e0;
+            touch-action: manipulation;
         }
+
+        /* Neon Text Utilities */
+        .text-neon-red { color: #ff0055; text-shadow: 0 0 5px #ff0055, 0 0 10px #ff0055; }
+        .text-neon-blue { color: #00f3ff; text-shadow: 0 0 5px #00f3ff, 0 0 10px #00f3ff; }
+        .text-neon-green { color: #00ff99; text-shadow: 0 0 5px #00ff99, 0 0 10px #00ff99; }
 
         #game-container {
-            position: relative;
-            background-color: var(--board-bg);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            user-select: none;
-            -webkit-user-select: none;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8);
+            background: #0a0a12;
+            border: 1px solid #00f3ff;
         }
 
-        #board-svg {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: calc(100% - 40px);
-            height: calc(100% - 40px);
-            pointer-events: none;
+        canvas {
+            cursor: pointer;
+            background-color: #08080c;
+            border-radius: 2px;
         }
 
-        line, rect, path {
-            stroke: var(--line-color);
-            stroke-width: 2;
-            fill: none;
+        /* UI Elements */
+        .cyber-panel {
+            background: rgba(10, 10, 18, 0.9);
+            border: 1px solid #333;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
         
-        .board-text {
-            fill: var(--line-color);
-            font-size: 24px;
-            font-family: "KaiTi", "STKaiti", serif; 
-            text-anchor: middle;
-            dominant-baseline: middle;
-            opacity: 0.6;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
+        .cyber-btn {
+            background: transparent;
+            border: 1px solid currentColor;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
         }
-
-        #board-grid {
-            display: grid;
-            grid-template-columns: repeat(9, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            width: 400px;
-            height: 450px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .cell {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20%;
-            height: 20%;
-            background-color: var(--highlight-color);
-            border-radius: 50%;
-            pointer-events: none;
-            display: none;
-            z-index: 5;
-        }
-
-        .cell.valid-move .indicator { display: block; }
-        .cell.selected-cell { background-color: var(--selected-color); }
-        .cell.last-move { background-color: var(--last-move-color); }
-
-        .piece {
-            width: 85%;
-            height: 85%;
-            border-radius: 50%;
-            background: #fdf5e6;
-            border: 4px solid #dcb35c;
-            box-shadow: 2px 2px 5px var(--shadow-color), inset -2px -2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            position: absolute;
-            top: 7.5%;
-            left: 7.5%;
-            z-index: 20;
-            transition: transform 0.2s ease-out;
+        .cyber-btn:hover {
+            box-shadow: 0 0 10px currentColor;
+            background: rgba(255,255,255,0.1);
         }
         
-        .piece::before {
-            content: '';
-            position: absolute;
-            width: 90%;
-            height: 90%;
+        .cyber-select {
+            background: #000;
+            color: #00f3ff;
+            border: 1px solid #00f3ff;
+        }
+        
+        .skill-btn {
+            background: rgba(0, 255, 153, 0.1);
+            border: 1px solid #00ff99;
+            color: #00ff99;
+            text-shadow: 0 0 5px #00ff99;
+            transition: all 0.3s ease;
+        }
+        .skill-btn:hover {
+            background: rgba(0, 255, 153, 0.3);
+            box-shadow: 0 0 15px #00ff99;
+        }
+
+        /* Loading spinner for AI thinking */
+        .loader {
+            border: 2px solid rgba(255, 0, 85, 0.1);
             border-radius: 50%;
-            border: 1px solid rgba(0,0,0,0.1);
-            pointer-events: none;
+            border-top: 2px solid #ff0055;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            box-shadow: 0 0 10px #ff0055;
         }
-
-        .piece.red { color: #c00; border-color: #e8b079; }
-        .piece.black { color: #222; border-color: #e8b079; }
-
-        #ui-panel {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            background: #444;
-            padding: 10px 20px;
-            border-radius: 50px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        #status {
-            font-size: 1.1em;
-            font-weight: bold;
-            min-width: 100px;
-            text-align: center;
-        }
-
-        select {
-            background: #5d4037;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9em;
-            outline: none;
-        }
-
-        button {
-            background: #5d4037;
-            color: #fff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.2s;
-        }
-
-        button:hover { background: #795548; }
-
-        .turn-indicator {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            border: 2px solid #fff;
-        }
-
-        #modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-        #modal-content {
-            background: #fff;
-            color: #000;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            min-width: 200px;
-        }
-        #modal h2 { margin-top: 0; }
-
-        @media (max-width: 600px) {
-            #ui-panel { width: 90%; padding: 10px; }
-            .piece { font-size: 18px; }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div id="game-container">
-        <svg id="board-svg" viewBox="0 0 360 400" preserveAspectRatio="none">
-            <rect x="0" y="0" width="360" height="400" fill="none" />
-            <g id="grid-verticals">
-                <line x1="20" y1="20" x2="20" y2="180" />
-                <line x1="60" y1="20" x2="60" y2="180" />
-                <line x1="100" y1="20" x2="100" y2="180" />
-                <line x1="140" y1="20" x2="140" y2="180" />
-                <line x1="180" y1="20" x2="180" y2="180" />
-                <line x1="220" y1="20" x2="220" y2="180" />
-                <line x1="260" y1="20" x2="260" y2="180" />
-                <line x1="300" y1="20" x2="300" y2="180" />
-                <line x1="340" y1="20" x2="340" y2="180" />
-                <line x1="20" y1="220" x2="20" y2="380" />
-                <line x1="60" y1="220" x2="60" y2="380" />
-                <line x1="100" y1="220" x2="100" y2="380" />
-                <line x1="140" y1="220" x2="140" y2="380" />
-                <line x1="180" y1="220" x2="180" y2="380" />
-                <line x1="220" y1="220" x2="220" y2="380" />
-                <line x1="260" y1="220" x2="260" y2="380" />
-                <line x1="300" y1="220" x2="300" y2="380" />
-                <line x1="340" y1="220" x2="340" y2="380" />
-                <line x1="20" y1="180" x2="20" y2="220" />
-                <line x1="340" y1="180" x2="340" y2="220" />
-            </g>
-            <g id="grid-horizontals">
-                <line x1="20" y1="20" x2="340" y2="20" />
-                <line x1="20" y1="60" x2="340" y2="60" />
-                <line x1="20" y1="100" x2="340" y2="100" />
-                <line x1="20" y1="140" x2="340" y2="140" />
-                <line x1="20" y1="180" x2="340" y2="180" />
-                <line x1="20" y1="220" x2="340" y2="220" />
-                <line x1="20" y1="260" x2="340" y2="260" />
-                <line x1="20" y1="300" x2="340" y2="300" />
-                <line x1="20" y1="340" x2="340" y2="340" />
-                <line x1="20" y1="380" x2="340" y2="380" />
-            </g>
-            <line x1="140" y1="20" x2="220" y2="100" />
-            <line x1="220" y1="20" x2="140" y2="100" />
-            <line x1="140" y1="300" x2="220" y2="380" />
-            <line x1="220" y1="300" x2="140" y2="380" />
-            <text x="90" y="200" class="board-text">楚 河</text>
-            <text x="270" y="200" class="board-text">漢 界</text>
-            
-            <defs>
-                <g id="marker">
-                    <path d="M -3 -10 L -3 -3 L -10 -3" /> <path d="M 3 -10 L 3 -3 L 10 -3" />
-                    <path d="M -3 10 L -3 3 L -10 3" /> <path d="M 3 10 L 3 3 L 10 3" />
-                </g>
-                <g id="marker-right">
-                    <path d="M -3 -10 L -3 -3 L -10 -3" /> <path d="M -3 10 L -3 3 L -10 3" />
-                </g>
-                <g id="marker-left">
-                    <path d="M 3 -10 L 3 -3 L 10 -3" /> <path d="M 3 10 L 3 3 L 10 3" />
-                </g>
-            </defs>
-            <use href="#marker" x="60" y="100" /> <use href="#marker" x="300" y="100" />
-            <use href="#marker" x="60" y="300" /> <use href="#marker" x="300" y="300" />
-            <use href="#marker-left" x="20" y="140" /> <use href="#marker" x="100" y="140" />
-            <use href="#marker" x="180" y="140" /> <use href="#marker" x="260" y="140" /> <use href="#marker-right" x="340" y="140" />
-            <use href="#marker-left" x="20" y="260" /> <use href="#marker" x="100" y="260" />
-            <use href="#marker" x="180" y="260" /> <use href="#marker" x="260" y="260" /> <use href="#marker-right" x="340" y="260" />
-        </svg>
-        <div id="board-grid"></div>
+    <div class="text-center mb-6">
+        <h1 class="text-5xl font-bold text-neon-blue mb-2 tracking-widest">XIANGQI <span class="text-sm align-top opacity-70">2077</span></h1>
+        <p class="text-gray-400 text-xs tracking-widest uppercase">Neural Network Uplink: <span class="text-neon-green">Active</span></p>
     </div>
 
-    <div id="ui-panel">
-        <div style="display:flex; align-items:center;">
-            <div id="turn-light" class="turn-indicator"></div>
-            <span id="status">Red's Turn</span>
+    <div id="game-container" class="p-1 rounded relative">
+        <canvas id="board" width="450" height="500"></canvas>
+        
+        <!-- Game Over Overlay -->
+        <div id="game-over" class="hidden absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-10 backdrop-blur-sm">
+            <div class="cyber-panel p-8 rounded border border-neon-red text-center">
+                <h2 id="winner-text" class="text-3xl font-bold mb-6 text-neon-red tracking-widest">RED WINS</h2>
+                <div class="flex gap-4 justify-center">
+                    <button onclick="undoLastMove()" class="cyber-btn text-neon-blue py-2 px-6 rounded font-bold">
+                        Revert
+                    </button>
+                    <button onclick="resetGame()" class="cyber-btn text-neon-red py-2 px-6 rounded font-bold">
+                        Reboot
+                    </button>
+                </div>
+            </div>
         </div>
-        <select id="mode-select" onchange="changeMode(this.value)">
-            <option value="PvP">Player vs Player</option>
-            <option value="PvAI" selected>Player vs AI</option>
-        </select>
-        <select id="ai-level" onchange="changeDifficulty(this.value)">
-            <option value="1">Easy (Depth 2)</option>
-            <option value="2" selected>Normal (Depth 3+)</option>
-        </select>
-        <button onclick="resetGame()">New Game</button>
     </div>
 
-    <div id="modal">
-        <div id="modal-content">
-            <h2 id="modal-msg">Game Over</h2>
-            <button onclick="closeModal()">Play Again</button>
+    <div class="mt-8 flex flex-col items-center gap-4 w-full max-w-md cyber-panel p-4 rounded border-t border-gray-800">
+        <div class="flex justify-between items-center w-full">
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]" id="turn-dot"></div>
+                    <span id="turn-indicator" class="font-bold tracking-wider text-lg">INITIALIZING...</span>
+                    <div id="ai-loader" class="loader hidden"></div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider">
+                    <label>Protocol:</label>
+                    <select id="game-mode" onchange="resetGame()" class="cyber-select px-2 py-1 rounded text-xs outline-none">
+                        <option value="pvp">Human vs Human</option>
+                        <option value="ai">Human vs Local CPU</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-3 items-center">
+                <!-- New Skill Button -->
+                <button onclick="activateSkill()" class="skill-btn py-1 px-3 rounded font-bold text-xs uppercase tracking-wider mr-2">
+                    全军出击
+                </button>
+                
+                <button onclick="undoLastMove()" class="text-xs text-gray-400 hover:text-neon-blue transition uppercase tracking-widest">Undo</button>
+                <button onclick="resetGame()" class="text-xs text-gray-400 hover:text-neon-red transition uppercase tracking-widest">Reset</button>
+            </div>
         </div>
+        
+        <div id="message-box" class="text-neon-red font-mono h-5 text-xs text-center w-full"></div>
     </div>
 
     <script>
+        // --- API Configuration ---
+        const apiKey = ""; // Not used in local mode
+
         // --- Constants ---
-        const ROWS = 10;
         const COLS = 9;
-        const RED = 'red';
-        const BLACK = 'black';
+        const ROWS = 10;
+        const CELL_SIZE = 50;
+        const MARGIN = 25; 
+        const PIECE_RADIUS = 18; 
+        
+        // Cyberpunk Palette
+        const COLOR_BG = '#08080c';
+        const COLOR_GRID = '#1a2f38'; 
+        const COLOR_GRID_GLOW = '#00f3ff'; 
+        
+        const COLOR_RED = '#ff0055'; 
+        const COLOR_RED_DIM = 'rgba(255, 0, 85, 0.2)';
+        
+        const COLOR_BLACK = '#00ff99'; 
+        const COLOR_BLACK_DIM = 'rgba(0, 255, 153, 0.2)';
+        
+        const COLOR_SELECT = 'rgba(255, 255, 255, 0.2)';
+        const COLOR_LAST_MOVE = 'rgba(0, 243, 255, 0.15)';
+        const COLOR_VALID_MOVE = 'rgba(0, 243, 255, 0.4)';
 
-        // R=Red, r=Black (lowercase). 
-        const INITIAL_BOARD = [
-            ['r', 'n', 'b', 'a', 'k', 'a', 'b', 'n', 'r'],
-            ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-            ['.', 'c', '.', '.', '.', '.', '.', 'c', '.'],
-            ['p', '.', 'p', '.', 'p', '.', 'p', '.', 'p'],
-            ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-            ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-            ['P', '.', 'P', '.', 'P', '.', 'P', '.', 'P'],
-            ['.', 'C', '.', '.', '.', '.', '.', 'C', '.'],
-            ['.', '.', '.', '.', '.', '.', '.', '.', '.'],
-            ['R', 'N', 'B', 'A', 'K', 'A', 'B', 'N', 'R']
-        ];
-
-        const PIECE_NAMES = {
-            'k': '將', 'K': '帥', 'a': '士', 'A': '仕', 'b': '象', 'B': '相',
-            'n': '馬', 'N': '傌', 'r': '車', 'R': '俥', 'c': '砲', 'C': '炮',
-            'p': '卒', 'P': '兵'
+        // Piece Definitions
+        const PIECES = {
+            'k': { char: ['帥', '將'], name: 'General', val: 10000, fenChar: 'k' },
+            'a': { char: ['仕', '士'], name: 'Advisor', val: 20, fenChar: 'a' },
+            'e': { char: ['相', '象'], name: 'Elephant', val: 20, fenChar: 'b' }, 
+            'h': { char: ['傌', '馬'], name: 'Horse', val: 40, fenChar: 'n' },
+            'r': { char: ['俥', '車'], name: 'Chariot', val: 90, fenChar: 'r' }, 
+            'c': { char: ['炮', '砲'], name: 'Cannon', val: 45, fenChar: 'c' },
+            'p': { char: ['兵', '卒'], name: 'Soldier', val: 10, fenChar: 'p' }
         };
 
-        // --- Game State ---
+        // --- State ---
         let board = [];
-        let turn = RED;
-        let selectedPos = null;
-        let validMoves = [];
+        let turn = 'red'; 
+        let selected = null; 
+        let lastMove = null; 
         let gameOver = false;
-        let gameMode = 'PvAI';
-        let aiDepth = 3;
-        const AI_COLOR = BLACK;
-        const PLAYER_COLOR = RED;
         let isAiThinking = false;
-        let lastMove = null; // {from: {r,c}, to: {r,c}}
+        let moveHistory = [];
+
+        const canvas = document.getElementById('board');
+        const ctx = canvas.getContext('2d');
 
         // --- Initialization ---
-        function init() {
-            const grid = document.getElementById('board-grid');
-            grid.innerHTML = '';
-            board = JSON.parse(JSON.stringify(INITIAL_BOARD));
-            lastMove = null;
+        function initBoard() {
+            board = Array(ROWS).fill(null).map(() => Array(COLS).fill(null));
             
-            resizeBoard();
-            window.addEventListener('resize', resizeBoard);
+            const setupRow = (row, color, typeStr) => {
+                const types = typeStr.split('');
+                types.forEach((type, col) => {
+                    board[row][col] = { type, color };
+                });
+            };
 
+            // Red (Bottom)
+            setupRow(9, 'red', 'rheakaehr');
+            board[7][1] = { type: 'c', color: 'red' };
+            board[7][7] = { type: 'c', color: 'red' };
+            [0, 2, 4, 6, 8].forEach(c => board[6][c] = { type: 'p', color: 'red' });
+
+            // Black (Top)
+            setupRow(0, 'black', 'rheakaehr');
+            board[2][1] = { type: 'c', color: 'black' };
+            board[2][7] = { type: 'c', color: 'black' };
+            [0, 2, 4, 6, 8].forEach(c => board[3][c] = { type: 'p', color: 'black' });
+        }
+
+        function resetGame() {
+            initBoard();
+            turn = 'red';
+            selected = null;
+            lastMove = null;
+            gameOver = false;
+            isAiThinking = false;
+            moveHistory = [];
+            document.getElementById('game-over').classList.add('hidden');
+            document.getElementById('message-box').innerText = "";
+            updateUI();
+            draw();
+        }
+        
+        // --- Skill Logic ---
+        function activateSkill() {
+            if (gameOver || isAiThinking) return;
+            
+            // Check if it's human turn in AI mode
+            const mode = document.getElementById('game-mode').value;
+            if (mode === 'ai' && turn === 'black') return; 
+
+            const movesToExecute = [];
+            // Red moves Up (-1), Black moves Down (+1)
+            const dr = turn === 'red' ? -1 : 1;
+
+            // 1. Identify all valid soldier moves
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.r = r;
-                    cell.dataset.c = c;
-                    
-                    const indicator = document.createElement('div');
-                    indicator.className = 'indicator';
-                    cell.appendChild(indicator);
-                    
-                    cell.addEventListener('click', () => handleCellClick(r, c));
-                    grid.appendChild(cell);
+                    const p = board[r][c];
+                    // Find friendly soldiers
+                    if (p && p.color === turn && p.type === 'p') {
+                        const nr = r + dr;
+                        const nc = c; // Skill moves strictly forward
+                        
+                        if (isValidPos(nr, nc)) {
+                            const target = board[nr][nc];
+                            // Check if blocked by friendly
+                            if (!target || target.color !== turn) {
+                                movesToExecute.push({
+                                    from: {r, c},
+                                    to: {r: nr, c: nc},
+                                    captured: target // could be null or enemy
+                                });
+                            }
+                        }
+                    }
                 }
             }
-            renderBoard();
-            updateStatus();
-        }
 
-        function resizeBoard() {
-            const grid = document.getElementById('board-grid');
-            const maxW = window.innerWidth - 40;
-            const maxH = window.innerHeight - 140;
-            let size = Math.min(maxW / 9, maxH / 10);
-            if (size > 60) size = 60;
-            
-            grid.style.width = `${size * 9}px`;
-            grid.style.height = `${size * 10}px`;
-            document.documentElement.style.setProperty('--piece-size', `${size}px`);
-            
-            const pieces = document.querySelectorAll('.piece');
-            pieces.forEach(p => p.style.fontSize = `${size * 0.5}px`);
-        }
+            if (movesToExecute.length === 0) {
+                document.getElementById('message-box').innerText = "UNABLE TO ADVANCE";
+                return;
+            }
 
-        // --- Core Logic ---
-        function getPiece(r, c) {
-            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return null;
-            const char = board[r][c];
-            if (char === '.') return null;
-            return {
-                type: char.toLowerCase(),
-                color: (char === char.toUpperCase()) ? RED : BLACK,
-                char: char
-            };
-        }
-
-        function renderBoard() {
-            const cells = document.querySelectorAll('.cell');
-            const cellSize = document.getElementById('board-grid').offsetWidth / 9;
-
-            cells.forEach(cell => {
-                const r = parseInt(cell.dataset.r);
-                const c = parseInt(cell.dataset.c);
-                const piece = getPiece(r, c);
-                
-                // Cleanup
-                const existingPiece = cell.querySelector('.piece');
-                if (existingPiece) cell.removeChild(existingPiece);
-                cell.classList.remove('selected-cell', 'valid-move', 'last-move');
-
-                if (piece) {
-                    const pDiv = document.createElement('div');
-                    pDiv.className = `piece ${piece.color}`;
-                    pDiv.innerText = PIECE_NAMES[piece.char];
-                    pDiv.style.fontSize = `${cellSize * 0.5}px`;
-                    cell.appendChild(pDiv);
-                }
-
-                if (selectedPos && selectedPos.r === r && selectedPos.c === c) cell.classList.add('selected-cell');
-                if (validMoves.some(m => m.r === r && m.c === c)) cell.classList.add('valid-move');
-                if (lastMove && ((lastMove.from.r===r && lastMove.from.c===c) || (lastMove.to.r===r && lastMove.to.c===c))) {
-                    cell.classList.add('last-move');
-                }
+            // 2. Execute all moves
+            // Clear origins first
+            movesToExecute.forEach(m => {
+                board[m.from.r][m.from.c] = null;
             });
-        }
+            
+            let generalCaptured = false;
+            // Place at destinations
+            movesToExecute.forEach(m => {
+                const piece = { type: 'p', color: turn };
+                board[m.to.r][m.to.c] = piece;
+                if (m.captured && m.captured.type === 'k') generalCaptured = true;
+            });
 
-        function handleCellClick(r, c) {
-            if (gameOver || isAiThinking) return;
-            if (gameMode === 'PvAI' && turn === AI_COLOR) return;
+            // 3. Update History (Batch Type)
+            moveHistory.push({
+                type: 'batch',
+                moves: movesToExecute,
+                turn: turn
+            });
 
-            const clickedPiece = getPiece(r, c);
-            const isOwnPiece = clickedPiece && clickedPiece.color === turn;
+            // 4. Post-Move cleanup
+            lastMove = null; // Clear highlights as multiple moved
+            selected = null;
+            document.getElementById('message-box').innerText = `ALL ARMY ATTACK: ${movesToExecute.length} UNITS ADVANCED`;
 
-            if (isOwnPiece) {
-                selectedPos = { r, c };
-                validMoves = getValidMoves(r, c, clickedPiece.type, clickedPiece.color);
-                renderBoard();
+            if (generalCaptured) {
+                endGame(turn === 'red' ? "RED WINS" : "BLACK WINS");
                 return;
             }
 
-            if (selectedPos) {
-                const move = validMoves.find(m => m.r === r && m.c === c);
-                if (move) {
-                    executeMove(selectedPos, { r, c });
+            turn = turn === 'red' ? 'black' : 'red';
+            draw();
+            updateUI();
+
+            // Trigger AI if needed
+            if (mode === 'ai' && turn === 'black' && !gameOver) {
+                makeAIMove();
+            }
+        }
+
+        function undoLastMove() {
+            if (isAiThinking || moveHistory.length === 0) return;
+            const mode = document.getElementById('game-mode').value;
+            
+            const revertStep = () => {
+                const last = moveHistory.pop();
+                if (!last) return null;
+
+                // Handle Batch Undo (Skill) vs Single Undo
+                if (last.type === 'batch') {
+                    last.moves.forEach(m => {
+                        board[m.to.r][m.to.c] = m.captured; // Put back what was there (empty or enemy)
+                        board[m.from.r][m.from.c] = { type: 'p', color: last.turn }; // Put soldier back
+                    });
                 } else {
-                    selectedPos = null;
-                    validMoves = [];
-                    renderBoard();
+                    board[last.from.r][last.from.c] = board[last.to.r][last.to.c];
+                    board[last.to.r][last.to.c] = last.captured;
+                }
+                
+                return last;
+            };
+
+            if (mode === 'ai') {
+                if (moveHistory.length >= 2) {
+                    revertStep(); revertStep(); turn = 'red';
+                } else if (moveHistory.length === 1) {
+                    revertStep(); turn = 'red';
+                }
+            } else {
+                const last = revertStep();
+                if (last) turn = last.turn;
+            }
+
+            gameOver = false;
+            document.getElementById('game-over').classList.add('hidden');
+            selected = null;
+            
+            // Restore last move highlight if it was a standard move
+            if (moveHistory.length > 0) {
+                const prev = moveHistory[moveHistory.length - 1];
+                if (prev.type !== 'batch') {
+                    lastMove = { from: prev.from, to: prev.to };
+                } else {
+                    lastMove = null;
+                }
+            } else {
+                lastMove = null;
+            }
+            
+            document.getElementById('message-box').innerText = "";
+            updateUI();
+            draw();
+        }
+
+        // --- Drawing ---
+        function getX(c) { return MARGIN + c * CELL_SIZE; }
+        function getY(r) { return MARGIN + r * CELL_SIZE; }
+
+        function drawNeonLine(x1, y1, x2, y2, color = COLOR_GRID, width = 1) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+        }
+
+        function drawBoardLines() {
+            ctx.fillStyle = COLOR_BG;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = COLOR_GRID_GLOW;
+
+            for (let r = 0; r < ROWS; r++) {
+                drawNeonLine(getX(0), getY(r), getX(COLS - 1), getY(r));
+            }
+            for (let c = 0; c < COLS; c++) {
+                drawNeonLine(getX(c), getY(0), getX(c), getY(4));
+                drawNeonLine(getX(c), getY(5), getX(c), getY(9));
+            }
+            drawNeonLine(getX(0), getY(4), getX(0), getY(5));
+            drawNeonLine(getX(8), getY(4), getX(8), getY(5));
+
+            // Palaces
+            drawNeonLine(getX(3), getY(0), getX(5), getY(2));
+            drawNeonLine(getX(5), getY(0), getX(3), getY(2));
+            drawNeonLine(getX(3), getY(9), getX(5), getY(7));
+            drawNeonLine(getX(5), getY(9), getX(3), getY(7));
+
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = 'rgba(0, 243, 255, 0.3)';
+            ctx.font = "bold 16px 'Orbitron'";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const riverY = getY(4) + CELL_SIZE / 2;
+            ctx.fillText("NULL SECTOR", getX(2), riverY);
+            ctx.fillText("DATA STREAM", getX(6), riverY);
+        }
+
+        function drawPiece(r, c, piece) {
+            const x = getX(c);
+            const y = getY(r);
+            const isRed = piece.color === 'red';
+            const baseColor = isRed ? COLOR_RED : COLOR_BLACK;
+            const dimColor = isRed ? COLOR_RED_DIM : COLOR_BLACK_DIM;
+
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = baseColor;
+            ctx.beginPath();
+            ctx.arc(x, y, PIECE_RADIUS, 0, Math.PI * 2);
+            ctx.strokeStyle = baseColor;
+            ctx.lineWidth = 2;
+            ctx.fillStyle = '#000';
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = dimColor;
+            ctx.fill();
+
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = baseColor;
+            ctx.fillStyle = baseColor;
+            ctx.font = "bold 20px 'Orbitron', 'Noto Serif SC'";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            const charIndex = isRed ? 0 : 1;
+            const char = PIECES[piece.type].char[charIndex];
+            ctx.fillText(char, x, y + 2);
+            ctx.shadowBlur = 0;
+        }
+
+        function drawHighlights() {
+            if (lastMove) {
+                ctx.fillStyle = COLOR_LAST_MOVE;
+                const { from, to } = lastMove;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = COLOR_GRID_GLOW;
+                ctx.fillRect(getX(from.c) - CELL_SIZE/2 + 2, getY(from.r) - CELL_SIZE/2 + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                ctx.fillRect(getX(to.c) - CELL_SIZE/2 + 2, getY(to.r) - CELL_SIZE/2 + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+                ctx.shadowBlur = 0;
+            }
+            if (selected) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath();
+                ctx.arc(getX(selected.c), getY(selected.r), PIECE_RADIUS + 6, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                const moves = getValidMoves(selected.r, selected.c);
+                ctx.fillStyle = COLOR_VALID_MOVE;
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#00f3ff';
+                moves.forEach(m => {
+                    ctx.beginPath();
+                    ctx.arc(getX(m.c), getY(m.r), 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function draw() {
+            drawBoardLines();
+            drawHighlights();
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (board[r][c]) {
+                        drawPiece(r, c, board[r][c]);
+                    }
                 }
             }
         }
 
-        function executeMove(from, to) {
-            const targetPiece = getPiece(to.r, to.c);
-            const movingPieceChar = board[from.r][from.c];
-            
-            if (targetPiece && targetPiece.type === 'k') {
-                gameOver = true;
-                renderBoard();
-                showModal(`${turn === RED ? "Red" : "Black"} Wins!`);
-                return;
+        // --- Logic ---
+        function isValidPos(r, c) { return r >= 0 && r < ROWS && c >= 0 && c < COLS; }
+
+        function getPseudoLegalMoves(r, c, piece) {
+            const moves = [];
+            const isRed = piece.color === 'red';
+            const addIfValid = (nr, nc) => {
+                if (!isValidPos(nr, nc)) return;
+                const target = board[nr][nc];
+                if (!target || target.color !== piece.color) moves.push({ r: nr, c: nc });
+            };
+
+            if (piece.type === 'k') {
+                const dr = [-1, 1, 0, 0], dc = [0, 0, -1, 1];
+                const rMin = isRed ? 7 : 0, rMax = isRed ? 9 : 2;
+                for (let i = 0; i < 4; i++) {
+                    const nr = r + dr[i], nc = c + dc[i];
+                    if (nr >= rMin && nr <= rMax && nc >= 3 && nc <= 5) addIfValid(nr, nc);
+                }
+            } else if (piece.type === 'a') {
+                const dr = [-1, -1, 1, 1], dc = [-1, 1, -1, 1];
+                const rMin = isRed ? 7 : 0, rMax = isRed ? 9 : 2;
+                for (let i = 0; i < 4; i++) {
+                    const nr = r + dr[i], nc = c + dc[i];
+                    if (nr >= rMin && nr <= rMax && nc >= 3 && nc <= 5) addIfValid(nr, nc);
+                }
+            } else if (piece.type === 'e') {
+                const dr = [-2, -2, 2, 2], dc = [-2, 2, -2, 2];
+                const er = [-1, -1, 1, 1], ec = [-1, 1, -1, 1];
+                for (let i = 0; i < 4; i++) {
+                    const nr = r + dr[i], nc = c + dc[i];
+                    if (isRed && nr < 5) continue;
+                    if (!isRed && nr > 4) continue;
+                    if (isValidPos(r+er[i], c+ec[i]) && !board[r+er[i]][c+ec[i]]) addIfValid(nr, nc);
+                }
+            } else if (piece.type === 'h') {
+                const jumps = [{r:-2,c:-1,lr:-1,lc:0}, {r:-2,c:1,lr:-1,lc:0}, {r:2,c:-1,lr:1,lc:0}, {r:2,c:1,lr:1,lc:0},
+                               {r:-1,c:-2,lr:0,lc:-1}, {r:1,c:-2,lr:0,lc:-1}, {r:-1,c:2,lr:0,lc:1}, {r:1,c:2,lr:0,lc:1}];
+                for (let j of jumps) {
+                    const nr = r + j.r, nc = c + j.c, lr = r + j.lr, lc = c + j.lc;
+                    if (isValidPos(nr, nc) && isValidPos(lr, lc) && !board[lr][lc]) addIfValid(nr, nc);
+                }
+            } else if (piece.type === 'r' || piece.type === 'c') {
+                const dirs = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+                for (let d of dirs) {
+                    let dist = 1, jumped = false;
+                    while (true) {
+                        const nr = r + d[0] * dist, nc = c + d[1] * dist;
+                        if (!isValidPos(nr, nc)) break;
+                        const target = board[nr][nc];
+                        if (piece.type === 'r') {
+                            if (!target) moves.push({r:nr, c:nc});
+                            else { if (target.color !== piece.color) moves.push({r:nr, c:nc}); break; }
+                        } else {
+                            if (!jumped) {
+                                if (!target) moves.push({r:nr, c:nc}); else jumped = true;
+                            } else {
+                                if (target) { if (target.color !== piece.color) moves.push({r:nr, c:nc}); break; }
+                            }
+                        }
+                        dist++;
+                    }
+                }
+            } else if (piece.type === 'p') {
+                const dr = isRed ? -1 : 1;
+                addIfValid(r + dr, c);
+                const crossedRiver = isRed ? (r <= 4) : (r >= 5);
+                if (crossedRiver) { addIfValid(r, c - 1); addIfValid(r, c + 1); }
             }
-
-            board[to.r][to.c] = movingPieceChar;
-            board[from.r][from.c] = '.';
-            lastMove = {from, to};
-
-            if (generalsFaceEachOther(board)) {
-                // Revert
-                board[from.r][from.c] = movingPieceChar;
-                board[to.r][to.c] = targetPiece ? targetPiece.char : '.';
-                lastMove = null;
-                if (!isAiThinking) alert("Illegal Move: Generals cannot face each other!");
-                return;
-            }
-
-            selectedPos = null;
-            validMoves = [];
-            turn = turn === RED ? BLACK : RED;
-            updateStatus();
-            renderBoard();
-
-            if (!gameOver && gameMode === 'PvAI' && turn === AI_COLOR) {
-                isAiThinking = true;
-                // Allow UI update before AI freezes thread
-                setTimeout(makeAiMove, 100);
-            }
+            return moves;
         }
 
-        function generalsFaceEachOther(currentBoard) {
+        function causesFlyingGeneral(move) {
+            const tempBoard = board.map(row => [...row]);
+            tempBoard[move.to.r][move.to.c] = tempBoard[move.from.r][move.from.c];
+            tempBoard[move.from.r][move.from.c] = null;
+            
             let redK, blackK;
             for(let r=0; r<ROWS; r++) {
-                for(let c=0; c<COLS; c++) {
-                    if (currentBoard[r][c] === 'K') redK = {r, c};
-                    if (currentBoard[r][c] === 'k') blackK = {r, c};
+                for(let c=3; c<=5; c++) { 
+                    const p = tempBoard[r][c];
+                    if(p && p.type === 'k') {
+                        if(p.color === 'red') redK = {r, c}; else blackK = {r, c};
+                    }
                 }
             }
-            if (!redK || !blackK) return false;
-            if (redK.c !== blackK.c) return false;
-            const minR = Math.min(redK.r, blackK.r);
-            const maxR = Math.max(redK.r, blackK.r);
-            for (let r = minR + 1; r < maxR; r++) {
-                if (currentBoard[r][redK.c] !== '.') return false;
+            if(redK && blackK && redK.c === blackK.c) {
+                for(let r = Math.min(redK.r, blackK.r) + 1; r < Math.max(redK.r, blackK.r); r++) {
+                    if(tempBoard[r][redK.c]) return false;
+                }
+                return true;
             }
-            return true;
+            return false;
         }
 
-        function updateStatus() {
-            const statusEl = document.getElementById('status');
-            const light = document.getElementById('turn-light');
+        function getValidMoves(r, c) {
+            const piece = board[r][c];
+            if (!piece) return [];
+            let moves = getPseudoLegalMoves(r, c, piece);
+            return moves.filter(m => !causesFlyingGeneral({from: {r, c}, to: m}));
+        }
+
+        function getAllMoves(color) {
+            let allMoves = [];
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const p = board[r][c];
+                    if (p && p.color === color) {
+                        const moves = getValidMoves(r, c);
+                        moves.forEach(to => allMoves.push({ from: {r, c}, to }));
+                    }
+                }
+            }
+            return allMoves;
+        }
+
+        function executeMove(move) {
+            const target = board[move.to.r][move.to.c];
+            const winner = (target && target.type === 'k');
             
-            if (isAiThinking) {
-                statusEl.innerText = "Thinking...";
-                statusEl.style.color = "#aaa";
-                light.style.backgroundColor = "#555";
-                return;
-            }
-            if (turn === RED) {
-                statusEl.innerText = "Red Turn";
-                statusEl.style.color = "#e57373";
-                light.style.backgroundColor = "#c00";
-            } else {
-                statusEl.innerText = "Black Turn";
-                statusEl.style.color = "#aaa";
-                light.style.backgroundColor = "#000";
-            }
+            board[move.to.r][move.to.c] = board[move.from.r][move.from.c];
+            board[move.from.r][move.from.c] = null;
+            
+            return winner;
         }
 
-        function changeMode(val) {
-            gameMode = val;
-            resetGame();
-        }
-        function changeDifficulty(val) {
-            aiDepth = parseInt(val) === 1 ? 2 : 3;
-        }
-        function resetGame() {
-            gameOver = false;
-            turn = RED;
-            selectedPos = null;
-            validMoves = [];
-            isAiThinking = false;
-            document.getElementById('modal').style.display = 'none';
-            init();
-        }
-        function closeModal() { resetGame(); }
-        function showModal(msg) {
-            document.getElementById('modal-msg').innerText = msg;
-            document.getElementById('modal').style.display = 'flex';
-        }
+        // --- Standard AI (Minimax) ---
 
-        // --- Advanced AI Logic (PST + Quiescence) ---
-
-        // Piece Square Tables (for BLACK pieces on Top, RED on Bottom)
-        // AI is BLACK. We define tables from Black's perspective (row 0 is top).
-        // For Red, we flip the row index.
-        
-        const PST = {
-            // Pawn: Advances = good. Crossing river (row > 4 for black) = great.
-            'p': [
-                [0,  0,  0,  0,  0,  0,  0,  0,  0],
-                [0,  0,  0,  0,  0,  0,  0,  0,  0],
-                [0,  0,  0,  0,  0,  0,  0,  0,  0],
-                [0,  0,  0,  0,  0,  0,  0,  0,  0], // River boundary
-                [10, 0, 10,  0, 10,  0, 10,  0, 10], // River crossed
-                [10, 10, 10, 10, 10, 10, 10, 10, 10],
-                [20, 20, 20, 20, 20, 20, 20, 20, 20], // Deep in enemy territory
-                [30, 30, 30, 30, 30, 30, 30, 30, 30],
-                [40, 40, 40, 40, 40, 40, 40, 40, 40],
-                [50, 50, 50, 50, 50, 50, 50, 50, 50]
-            ],
-            // Horse: Avoid edges/corners. Center is better.
-            'n': [
-                [0, -5,  0,  0,  0,  0,  0, -5,  0],
-                [0,  5, 15, 15, 15, 15, 15,  5,  0],
-                [5,  5, 15, 20, 20, 20, 15,  5,  5],
-                [5, 10, 20, 30, 25, 30, 20, 10,  5],
-                [5, 15, 25, 35, 35, 35, 25, 15,  5],
-                [5, 15, 25, 35, 35, 35, 25, 15,  5],
-                [5, 10, 20, 30, 25, 30, 20, 10,  5],
-                [5,  5, 15, 20, 20, 20, 15,  5,  5],
-                [0,  5, 15, 15, 15, 15, 15,  5,  0],
-                [0, -5,  0,  0,  0,  0,  0, -5,  0]
-            ],
-            // Rook: Control open files.
-            'r': [
-                [0,  0,  0,  0,  0,  0,  0,  0,  0],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [10, 20, 15, 20, 15, 20, 15, 20, 10],
-                [5, 15, 10, 15, 10, 15, 10, 15,  5]
-            ],
-            // Cannon: Central control is good.
-            'c': [
-                [0,  0,  0,  0,  0,  0,  0,  0,  0],
-                [0, 10,  0, 10,  0, 10,  0, 10,  0],
-                [0, 10, 20, 30, 50, 30, 20, 10,  0], // The "Hollow Central Cannon" spot
-                [0, 10, 20, 20, 20, 20, 20, 10,  0],
-                [0, 10, 20, 20, 20, 20, 20, 10,  0],
-                [0, 10, 20, 20, 20, 20, 20, 10,  0],
-                [0, 10, 20, 20, 20, 20, 20, 10,  0],
-                [0, 10, 20, 30, 30, 30, 20, 10,  0],
-                [0, 10,  0, 10,  0, 10,  0, 10,  0],
-                [0,  0,  0,  0,  0,  0,  0,  0,  0]
-            ],
-            // King/Guard/Elephant: Defensive.
-            'k': [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]], 
-            'a': [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]],
-            'b': [[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0]]
-        };
-
-        const MATERIAL_VALUES = {
-            'k': 10000, 'a': 20, 'b': 20, 'n': 400, 'r': 900, 'c': 450, 'p': 100 // Base values
-        };
-
-        function makeAiMove() {
-            // Use iterative deepening-ish logic? No, just straight alpha-beta with new Eval
-            // Add randomness to equal moves
-            const moves = getAllMoves(board, AI_COLOR);
-            if (moves.length === 0) { gameOver = true; showModal("Red Wins!"); return; }
-
-            // Initial Sort for move ordering (Captures first)
-            moves.sort((a, b) => {
-                const valA = getPieceValue(board[a.to.r][a.to.c]);
-                const valB = getPieceValue(board[b.to.r][b.to.c]);
-                return valB - valA;
-            });
-
-            let bestMove = null;
-            let bestValue = -Infinity;
-            let alpha = -Infinity;
-            let beta = Infinity;
-
-            // Root search
-            for (let move of moves) {
-                const savedPiece = board[move.to.r][move.to.c];
-                const movingPiece = board[move.from.r][move.from.c];
-                
-                board[move.to.r][move.to.c] = movingPiece;
-                board[move.from.r][move.from.c] = '.';
-
-                // Suicide Check (Flying General)
-                if (generalsFaceEachOther(board)) {
-                    board[move.from.r][move.from.c] = movingPiece;
-                    board[move.to.r][move.to.c] = savedPiece;
-                    continue;
+        function evaluateBoard(activeColor) {
+            let score = 0;
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const p = board[r][c];
+                    if (p) {
+                        let val = PIECES[p.type].val;
+                        if (p.type === 'p') {
+                            if (p.color === 'red' && r < 5) val += 10;
+                            if (p.color === 'black' && r > 4) val += 10;
+                            if (c >= 3 && c <= 5) val += 10;
+                        }
+                        score += (p.color === 'black' ? val : -val);
+                    }
                 }
-
-                // Instant win check
-                if (savedPiece === 'K') {
-                    board[move.from.r][move.from.c] = movingPiece;
-                    board[move.to.r][move.to.c] = savedPiece;
-                    executeMove(move.from, move.to);
-                    isAiThinking = false;
-                    return;
-                }
-
-                const value = minimax(aiDepth - 1, alpha, beta, false);
-                
-                board[move.from.r][move.from.c] = movingPiece;
-                board[move.to.r][move.to.c] = savedPiece;
-
-                if (value > bestValue) {
-                    bestValue = value;
-                    bestMove = move;
-                }
-                alpha = Math.max(alpha, value);
             }
-
-            if (bestMove) {
-                executeMove(bestMove.from, bestMove.to);
-            } else {
-                gameOver = true; showModal("Red Wins!");
-            }
-            isAiThinking = false;
+            return score;
         }
 
-        function minimax(depth, alpha, beta, isMaximizing) {
-            if (depth === 0) {
-                // Quiescence Search at leaf nodes
-                return quiescence(3, alpha, beta, isMaximizing); 
-            }
+        function minimax(depth, isMaximizing, alpha, beta) {
+            if (depth === 0) return evaluateBoard();
 
-            const color = isMaximizing ? AI_COLOR : PLAYER_COLOR;
-            const moves = getAllMoves(board, color);
-
-            if (moves.length === 0) return isMaximizing ? -Infinity : Infinity;
-
-            // Move Ordering: Captures first
-            moves.sort((a, b) => {
-                const valA = getPieceValue(board[a.to.r][a.to.c]);
-                const valB = getPieceValue(board[b.to.r][b.to.c]);
-                return valB - valA;
-            });
+            const moves = getAllMoves(isMaximizing ? 'black' : 'red');
+            if (moves.length === 0) return isMaximizing ? -100000 : 100000;
 
             if (isMaximizing) {
                 let maxEval = -Infinity;
                 for (let move of moves) {
-                    const savedPiece = board[move.to.r][move.to.c];
-                    const movingPiece = board[move.from.r][move.from.c];
+                    const savedTarget = board[move.to.r][move.to.c];
+                    const savedSource = board[move.from.r][move.from.c];
+                    board[move.to.r][move.to.c] = savedSource;
+                    board[move.from.r][move.from.c] = null;
                     
-                    if (savedPiece === 'K') return 20000; 
-
-                    board[move.to.r][move.to.c] = movingPiece;
-                    board[move.from.r][move.from.c] = '.';
-                    
-                    if (generalsFaceEachOther(board)) {
-                        board[move.from.r][move.from.c] = movingPiece;
-                        board[move.to.r][move.to.c] = savedPiece;
-                        continue; 
+                    if (savedTarget && savedTarget.type === 'k') {
+                        board[move.from.r][move.from.c] = savedSource; board[move.to.r][move.to.c] = savedTarget;
+                        return 100000;
                     }
 
-                    const eval = minimax(depth - 1, alpha, beta, false);
-                    
-                    board[move.from.r][move.from.c] = movingPiece;
-                    board[move.to.r][move.to.c] = savedPiece;
+                    const eval = minimax(depth - 1, false, alpha, beta);
+                    board[move.from.r][move.from.c] = savedSource;
+                    board[move.to.r][move.to.c] = savedTarget;
 
                     maxEval = Math.max(maxEval, eval);
                     alpha = Math.max(alpha, eval);
@@ -731,24 +667,19 @@
             } else {
                 let minEval = Infinity;
                 for (let move of moves) {
-                    const savedPiece = board[move.to.r][move.to.c];
-                    const movingPiece = board[move.from.r][move.from.c];
+                    const savedTarget = board[move.to.r][move.to.c];
+                    const savedSource = board[move.from.r][move.from.c];
+                    board[move.to.r][move.to.c] = savedSource;
+                    board[move.from.r][move.from.c] = null;
 
-                    if (savedPiece === 'k') return -20000;
-
-                    board[move.to.r][move.to.c] = movingPiece;
-                    board[move.from.r][move.from.c] = '.';
-                    
-                    if (generalsFaceEachOther(board)) {
-                        board[move.from.r][move.from.c] = movingPiece;
-                        board[move.to.r][move.to.c] = savedPiece;
-                        continue;
+                    if (savedTarget && savedTarget.type === 'k') {
+                        board[move.from.r][move.from.c] = savedSource; board[move.to.r][move.to.c] = savedTarget;
+                        return -100000;
                     }
 
-                    const eval = minimax(depth - 1, alpha, beta, true);
-                    
-                    board[move.from.r][move.from.c] = movingPiece;
-                    board[move.to.r][move.to.c] = savedPiece;
+                    const eval = minimax(depth - 1, true, alpha, beta);
+                    board[move.from.r][move.from.c] = savedSource;
+                    board[move.to.r][move.to.c] = savedTarget;
 
                     minEval = Math.min(minEval, eval);
                     beta = Math.min(beta, eval);
@@ -758,228 +689,206 @@
             }
         }
 
-        // Quiescence Search: Only search captures to avoid horizon effect
-        function quiescence(limit, alpha, beta, isMaximizing) {
-            const standPat = evaluateBoard(board);
-            if (limit === 0) return standPat;
+        function getMinimaxMove() {
+             const depth = 3;
+             let bestMove = null;
+             let bestValue = -Infinity;
+             const moves = getAllMoves('black');
+             
+             for (let move of moves) {
+                 const savedTarget = board[move.to.r][move.to.c];
+                 const savedSource = board[move.from.r][move.from.c];
+                 
+                 board[move.to.r][move.to.c] = savedSource;
+                 board[move.from.r][move.from.c] = null;
+                 
+                 if (savedTarget && savedTarget.type === 'k') {
+                     bestMove = move;
+                     board[move.from.r][move.from.c] = savedSource; board[move.to.r][move.to.c] = savedTarget;
+                     break; 
+                 }
 
-            if (isMaximizing) {
-                if (standPat >= beta) return beta;
-                if (standPat > alpha) alpha = standPat;
-            } else {
-                if (standPat <= alpha) return alpha;
-                if (standPat < beta) beta = standPat;
-            }
+                 const moveValue = minimax(depth - 1, false, -Infinity, Infinity);
+                 
+                 board[move.from.r][move.from.c] = savedSource;
+                 board[move.to.r][move.to.c] = savedTarget;
 
-            const color = isMaximizing ? AI_COLOR : PLAYER_COLOR;
-            // Only get CAPTURE moves
-            const moves = getAllMoves(board, color).filter(m => board[m.to.r][m.to.c] !== '.');
-            
-            // Sort by victim value (MVV/LVA lite)
-            moves.sort((a, b) => {
-                return getPieceValue(board[b.to.r][b.to.c]) - getPieceValue(board[a.to.r][a.to.c]);
-            });
+                 if (moveValue > bestValue) {
+                     bestValue = moveValue;
+                     bestMove = move;
+                 }
+             }
+             return bestMove;
+        }
 
-            for (let move of moves) {
-                const savedPiece = board[move.to.r][move.to.c];
-                const movingPiece = board[move.from.r][move.from.c];
+        // --- Gemini API Helper (Multimodal) ---
 
-                board[move.to.r][move.to.c] = movingPiece;
-                board[move.from.r][move.from.c] = '.';
+        function getBoardImage() {
+            const dataURL = canvas.toDataURL('image/png');
+            // Remove the data:image/png;base64, prefix
+            return dataURL.split(',')[1]; 
+        }
 
-                 if (generalsFaceEachOther(board)) {
-                    board[move.from.r][move.from.c] = movingPiece;
-                    board[move.to.r][move.to.c] = savedPiece;
-                    continue; 
+        async function callGeminiAPI(systemPrompt, userPrompt, imageBase64 = null) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                // Construct payload with optional image
+                const parts = [];
+                parts.push({ text: userPrompt });
+                
+                if (imageBase64) {
+                    parts.push({
+                        inlineData: {
+                            mimeType: "image/png",
+                            data: imageBase64
+                        }
+                    });
                 }
 
-                // Recurse with limit - 1
-                const score = quiescence(limit - 1, alpha, beta, !isMaximizing);
+                const payload = {
+                    contents: [{ role: "user", parts: parts }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { responseMimeType: "application/json" }
+                };
 
-                board[move.from.r][move.from.c] = movingPiece;
-                board[move.to.r][move.to.c] = savedPiece;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-                if (isMaximizing) {
-                    if (score >= beta) return beta;
-                    if (score > alpha) alpha = score;
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("No text in response");
+                
+                return JSON.parse(text);
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return null;
+            }
+        }
+
+        // --- Main AI Controller ---
+
+        function makeAIMove() {
+            isAiThinking = true;
+            updateUI();
+
+            // Use setTimeout to allow the UI to update ("CALCULATING...") before the heavy JS runs
+            setTimeout(() => {
+                const bestMove = getMinimaxMove();
+
+                if (bestMove) {
+                    const target = board[bestMove.to.r][bestMove.to.c];
+                    moveHistory.push({ from: bestMove.from, to: bestMove.to, captured: target, turn: 'black' });
+
+                    const winner = executeMove(bestMove);
+                    lastMove = bestMove;
+                    if (winner) endGame("BLACK WINS");
+                    else {
+                        turn = 'red';
+                        isAiThinking = false;
+                        updateUI();
+                        draw();
+                    }
                 } else {
-                    if (score <= alpha) return alpha;
-                    if (score < beta) beta = score;
+                    endGame("RED WINS");
                 }
-            }
-            return isMaximizing ? alpha : beta;
+            }, 50);
         }
 
-        function evaluateBoard(b) {
-            let score = 0;
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    const char = b[r][c];
-                    if (char === '.') continue;
+        function endGame(winnerName) {
+            gameOver = true;
+            isAiThinking = false;
+            draw();
+            document.getElementById('winner-text').innerText = winnerName;
+            document.getElementById('game-over').classList.remove('hidden');
+            updateUI();
+        }
+
+        // --- Input Handling ---
+
+        function updateUI() {
+            const ind = document.getElementById('turn-indicator');
+            const dot = document.getElementById('turn-dot');
+            const loader = document.getElementById('ai-loader');
+            
+            if (isAiThinking) {
+                ind.innerText = "CALCULATING...";
+                ind.className = "font-bold tracking-wider text-lg text-neon-green animate-pulse";
+                dot.className = "w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] bg-[#00ff99]";
+                loader.classList.remove('hidden');
+            } else {
+                ind.innerText = turn === 'red' ? "PLAYER TURN" : "OPPONENT TURN";
+                ind.className = `font-bold tracking-wider text-lg ${turn === 'red' ? 'text-neon-red' : 'text-neon-green'}`;
+                dot.className = `w-3 h-3 rounded-full shadow-[0_0_10px_currentColor] transition-colors ${turn === 'red' ? 'bg-[#ff0055]' : 'bg-[#00ff99]'}`;
+                loader.classList.add('hidden');
+            }
+        }
+
+        function handleClick(e) {
+            if (gameOver || isAiThinking) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            const c = Math.round((x - MARGIN) / CELL_SIZE);
+            const r = Math.round((y - MARGIN) / CELL_SIZE);
+
+            if (!isValidPos(r, c)) return;
+
+            const mode = document.getElementById('game-mode').value;
+            if (mode === 'ai' && turn === 'black') return;
+
+            const clickedPiece = board[r][c];
+
+            if (selected) {
+                const validMoves = getValidMoves(selected.r, selected.c);
+                const isMove = validMoves.some(m => m.r === r && m.c === c);
+
+                if (isMove) {
+                    const target = board[r][c];
+                    moveHistory.push({ from: selected, to: {r, c}, captured: target, turn: turn });
+
+                    const winner = executeMove({from: selected, to: {r, c}});
+                    lastMove = { from: selected, to: {r, c} };
+                    selected = null;
                     
-                    const type = char.toLowerCase();
-                    const val = MATERIAL_VALUES[type];
-                    
-                    // Position Bonus
-                    let pstVal = 0;
-                    if (PST[type]) {
-                        if (char === char.toLowerCase()) {
-                            // Black (AI) - Use table as is
-                            pstVal = PST[type][r][c];
-                        } else {
-                            // Red (Player) - Mirror row index
-                            pstVal = PST[type][9-r][c];
-                        }
+                    if (winner) {
+                        endGame(turn === 'red' ? "RED WINS" : "BLACK WINS");
+                        return;
                     }
 
-                    if (char === char.toLowerCase()) {
-                        score += val + pstVal;
-                    } else {
-                        score -= (val + pstVal);
+                    turn = turn === 'red' ? 'black' : 'red';
+                    draw();
+                    updateUI();
+
+                    if (mode === 'ai' && turn === 'black' && !gameOver) {
+                        makeAIMove();
                     }
+                    return;
                 }
             }
-            // Add mobility bonus (approximated by just randomness to break ties for now, 
-            // real mobility is too expensive for JS recursion in this structure)
-            // score += Math.random() * 5; 
-            return score;
+
+            if (clickedPiece && clickedPiece.color === turn) {
+                selected = {r, c};
+                draw();
+            } else {
+                selected = null;
+                draw();
+            }
         }
 
-        function getPieceValue(char) {
-            if (!char || char === '.') return 0;
-            return MATERIAL_VALUES[char.toLowerCase()] || 0;
-        }
-
-        function getAllMoves(currentBoard, color) {
-            let moves = [];
-            for (let r = 0; r < ROWS; r++) {
-                for (let c = 0; c < COLS; c++) {
-                    const char = currentBoard[r][c];
-                    if (char === '.') continue;
-                    const pColor = (char === char.toUpperCase()) ? RED : BLACK;
-                    if (pColor === color) {
-                        const type = char.toLowerCase();
-                        const valid = getValidMoves(r, c, type, color);
-                        valid.forEach(v => moves.push({from: {r, c}, to: v}));
-                    }
-                }
-            }
-            return moves;
-        }
-
-        // --- Validation (Unchanged logic mostly) ---
-        function getValidMoves(r, c, type, color) {
-            let moves = [];
-            const check = (nr, nc) => {
-                if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) return false;
-                const targetChar = board[nr][nc]; 
-                if (targetChar !== '.') {
-                    const targetColor = (targetChar === targetChar.toUpperCase()) ? RED : BLACK;
-                    if (targetColor === color) return false;
-                }
-                return true;
-            };
-
-            if (type === 'k') {
-                const deltas = [[0,1], [0,-1], [1,0], [-1,0]];
-                deltas.forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (inPalace(nr, nc, color) && check(nr, nc)) moves.push({r: nr, c: nc});
-                });
-            } 
-            else if (type === 'a') {
-                const deltas = [[1,1], [1,-1], [-1,1], [-1,-1]];
-                deltas.forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (inPalace(nr, nc, color) && check(nr, nc)) moves.push({r: nr, c: nc});
-                });
-            }
-            else if (type === 'b') {
-                const deltas = [[2,2], [2,-2], [-2,2], [-2,-2]];
-                deltas.forEach(([dr, dc]) => {
-                    const nr = r + dr, nc = c + dc;
-                    if (color === RED && nr < 5) return;
-                    if (color === BLACK && nr > 4) return;
-                    const mr = r + dr/2, mc = c + dc/2;
-                    if (check(nr, nc) && board[mr][mc] === '.') moves.push({r: nr, c: nc});
-                });
-            }
-            else if (type === 'n') {
-                const jumps = [
-                    {dr: -2, dc: -1, block: {r: -1, c: 0}}, {dr: -2, dc: 1,  block: {r: -1, c: 0}},
-                    {dr: 2,  dc: -1, block: {r: 1, c: 0}},  {dr: 2,  dc: 1,  block: {r: 1, c: 0}},
-                    {dr: -1, dc: -2, block: {r: 0, c: -1}}, {dr: 1,  dc: -2, block: {r: 0, c: -1}},
-                    {dr: -1, dc: 2,  block: {r: 0, c: 1}},  {dr: 1,  dc: 2,  block: {r: 0, c: 1}}
-                ];
-                jumps.forEach(j => {
-                    const nr = r + j.dr, nc = c + j.dc;
-                    const br = r + j.block.r, bc = c + j.block.c;
-                    if (br >=0 && br < ROWS && bc >=0 && bc < COLS && board[br][bc] === '.') {
-                         if (check(nr, nc)) moves.push({r: nr, c: nc});
-                    }
-                });
-            }
-            else if (type === 'r') {
-                const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
-                dirs.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    while(nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                        const pChar = board[nr][nc];
-                        if (pChar === '.') {
-                            moves.push({r: nr, c: nc});
-                        } else {
-                            const pColor = (pChar === pChar.toUpperCase()) ? RED : BLACK;
-                            if (pColor !== color) moves.push({r: nr, c: nc});
-                            break;
-                        }
-                        nr += dr; nc += dc;
-                    }
-                });
-            }
-            else if (type === 'c') {
-                const dirs = [[0,1], [0,-1], [1,0], [-1,0]];
-                dirs.forEach(([dr, dc]) => {
-                    let nr = r + dr, nc = c + dc;
-                    let screenFound = false;
-                    while(nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                        const pChar = board[nr][nc];
-                        if (!screenFound) {
-                            if (pChar === '.') {
-                                moves.push({r: nr, c: nc});
-                            } else {
-                                screenFound = true;
-                            }
-                        } else {
-                            if (pChar !== '.') {
-                                const pColor = (pChar === pChar.toUpperCase()) ? RED : BLACK;
-                                if (pColor !== color) moves.push({r: nr, c: nc});
-                                break;
-                            }
-                        }
-                        nr += dr; nc += dc;
-                    }
-                });
-            }
-            else if (type === 'p') {
-                const forward = (color === RED) ? -1 : 1;
-                const crossedRiver = (color === RED) ? r <= 4 : r >= 5;
-                if (check(r + forward, c)) moves.push({r: r + forward, c});
-                if (crossedRiver) {
-                    if (check(r, c - 1)) moves.push({r, c: c - 1});
-                    if (check(r, c + 1)) moves.push({r, c: c + 1});
-                }
-            }
-            return moves;
-        }
-
-        function inPalace(r, c, color) {
-            if (c < 3 || c > 5) return false;
-            if (color === RED) return r >= 7 && r <= 9;
-            if (color === BLACK) return r >= 0 && r <= 2;
-            return false;
-        }
-
-        window.onload = init;
+        canvas.addEventListener('click', handleClick);
+        initBoard();
+        draw();
     </script>
 </body>
 </html>
